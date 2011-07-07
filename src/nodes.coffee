@@ -531,7 +531,16 @@ exports.Call = class Call extends Base
     args = @filterImplicitObjects @args
     args = (arg.compile o, LEVEL_LIST for arg in args).join ', '
     if @isSuper
-      @superReference(o) + ".call(this#{ args and ', ' + args })"
+      if o.google
+        {method} = o.scope
+        {name} = method
+        if method.klass
+          superRef = (new Value (new Literal method.klass), [new Access(new Literal "superClass_"), new Access new Literal name]).compile o
+        else
+          superRef = "TODO_FIND_EXTENDS_NODE"
+      else
+        superRef = @superReference(o)
+      superRef + ".call(this#{ args and ', ' + args })"
     else
       (if @isNew then 'new ' else '') + @variable.compile(o, LEVEL_ACCESS) + "(#{args})"
 
@@ -581,8 +590,13 @@ exports.Extends = class Extends extends Base
 
   # Hooks one constructor into another's prototype chain.
   compile: (o) ->
-    utility 'hasProp'
-    new Call(new Value(new Literal utility 'extends'), [@child, @parent]).compile o
+    unless o.google
+      utility 'hasProp'
+    if o.google
+      inheritsFunction = new Value(new Literal 'goog.inherits') 
+    else
+      inheritsFunction = new Value(new Literal utility 'extends')
+    new Call(inheritsFunction, [@child, @parent]).compile o
 
 #### Access
 
