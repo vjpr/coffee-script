@@ -12,3 +12,6 @@ class example.people.AbstractPerson
 
   hasFriend: (friend) ->
     goog.array.contains @getFriends_(), friend
+    
+  @isMutalFriends: (friendA, friendB) ->
+    friendA.hasFriend(friendB) and friendB.hasFriend(friendA)
