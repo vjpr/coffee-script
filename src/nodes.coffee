@@ -533,8 +533,8 @@ exports.Call = class Call extends Base
     if @isSuper
       if o.google
         {method} = o.scope
-        {name} = method
         if method.klass
+          {name} = method
           superRef = (new Value (new Literal method.klass), [new Access(new Literal "superClass_"), new Access new Literal name]).compile o
         else
           superRef = "TODO_FIND_EXTENDS_NODE"
@@ -818,8 +818,9 @@ exports.Class = class Class extends Base
   children: ['variable', 'parent', 'body']
 
   # Figure out the appropriate name for the constructor function of this class.
-  determineName: ->
+  determineName: (o) ->
     return null unless @variable
+    return @variable.compile o if o.google
     decl = if tail = last @variable.properties
       tail instanceof Access and tail.name.value
     else
@@ -899,7 +900,7 @@ exports.Class = class Class extends Base
   # equivalent syntax tree and compile that, in pieces. You can see the
   # constructor, property assignments, and inheritance getting built out below.
   compileNode: (o) ->
-    decl  = @determineName()
+    decl  = @determineName o
     name  = decl or @name or '_Class'
     lname = new Literal name
 
@@ -1111,11 +1112,15 @@ exports.Code = class Code extends Base
     o.scope.parameter vars[i] = v.compile o for v, i in vars unless splats
     @body.makeReturn() unless wasEmpty or @noReturn
     idt   = o.indent
-    code  = 'function'
-    code  += ' ' + @name if @ctor
+    isGoogleConstructor = o.google and @ctor
+    if isGoogleConstructor
+      code = "/** @constructor */\n#{@tab}#{@name} = function" 
+    else
+      code  = 'function'
+      code  += ' ' + @name if @ctor
     code  += '(' + vars.join(', ') + ') {'
     code  += "\n#{ @body.compileWithDeclarations o }\n#{@tab}" unless @body.isEmpty()
-    code  += '}'
+    code  += if isGoogleConstructor then '};' else '}'
     return @tab + code if @ctor
     return utility('bind') + "(#{code}, #{@context})" if @bound
     if @front or (o.level >= LEVEL_ACCESS) then "(#{code})" else code

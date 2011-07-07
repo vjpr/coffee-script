@@ -11,6 +11,6 @@
 
 set -e
 mkdir -p build/closure/test
-bin/coffee --google -o build/closure/test -c closure/test/*.coffee
+bin/coffee --google -b -o build/closure/test -c closure/test/*.coffee
 cat build/closure/test/person.js
 cat build/closure/test/adult.js
