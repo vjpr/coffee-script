@@ -1124,10 +1124,12 @@ exports.Code = class Code extends Base
       if @ctorParent
         parentClassName = @ctorParent.compile o
         extendsJsDoc = "#{@tab} * @extends {#{parentClassName}}\n"
+        requireSuper = "goog.require('#{parentClassName}');\n"
       else
-        extendsJsDoc = '' 
+        extendsJsDoc = ''
+        requireSuper = '' 
       code = """
-             goog.provide('#{@name}');
+             #{requireSuper}goog.provide('#{@name}');
              
              #{@tab}/**
              #{@tab} * @constructor
