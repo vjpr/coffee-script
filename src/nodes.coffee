@@ -913,7 +913,7 @@ exports.Class = class Class extends Base
     @ensureConstructor name, o
     @body.expressions.unshift new Extends lname, @parent if @parent and not o.google
     @body.expressions.unshift @ctor unless @ctor instanceof Code
-    @body.expressions.push lname
+    @body.expressions.push lname unless o.google
     @addBoundFunctions o
 
     if o.google
