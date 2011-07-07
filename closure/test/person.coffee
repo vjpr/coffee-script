@@ -1,6 +1,7 @@
-class example.people.Person
+class example.people.Person extends example.people.AbstractPerson
 
   constructor: (@first, @last) ->
+    super()
   
   # TODO: For non-accessor methods (such as setFirst(), figure out how to
   # eliminate the return statement.
@@ -8,6 +9,8 @@ class example.people.Person
   # there.
   
   # TODO: Handling of JSDoc comments is weird.
+  
+  # TODO: How will goog.require() statements be accounted for? Included manually?
 
   /** @return {string} */
   getFirst: -> @first

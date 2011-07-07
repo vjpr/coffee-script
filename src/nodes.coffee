@@ -468,10 +468,20 @@ exports.Call = class Call extends Base
     throw SyntaxError 'cannot call super outside of a function.' unless method
     {name} = method
     throw SyntaxError 'cannot call super on an anonymous function.' unless name?
-    if method.klass
-      (new Value (new Literal method.klass), [new Access(new Literal "__super__"), new Access new Literal name]).compile o
+    if o.google
+      if method.klass
+        (new Value (new Literal method.klass), [new Access(new Literal "superClass_"), new Access new Literal name]).compile o
+      else
+        # This is a call to the superclass constructor.
+        # Although the technique used by CoffeeScript (__super__.constructor)
+        # should also work for Closure, we use a slightly different style for
+        # consistency with existing Closure Library code.
+        method.ctorParent.compile o
     else
-      "#{name}.__super__.constructor"
+      if method.klass
+        (new Value (new Literal method.klass), [new Access(new Literal "__super__"), new Access new Literal name]).compile o
+      else
+        "#{name}.__super__.constructor"
 
   # Soaked chained invocations unfold into if/else ternary structures.
   unfoldSoak: (o) ->
@@ -531,16 +541,7 @@ exports.Call = class Call extends Base
     args = @filterImplicitObjects @args
     args = (arg.compile o, LEVEL_LIST for arg in args).join ', '
     if @isSuper
-      if o.google
-        {method} = o.scope
-        if method.klass
-          {name} = method
-          superRef = (new Value (new Literal method.klass), [new Access(new Literal "superClass_"), new Access new Literal name]).compile o
-        else
-          superRef = "TODO_FIND_EXTENDS_NODE"
-      else
-        superRef = @superReference(o)
-      superRef + ".call(this#{ args and ', ' + args })"
+      @superReference(o) + ".call(this#{ args and ', ' + args })"
     else
       (if @isNew then 'new ' else '') + @variable.compile(o, LEVEL_ACCESS) + "(#{args})"
 
@@ -886,15 +887,18 @@ exports.Class = class Class extends Base
 
   # Make sure that a constructor is defined for the class, and properly
   # configured.
-  ensureConstructor: (name) ->
+  ensureConstructor: (name, o) ->
     if not @ctor
       @ctor = new Code
-      @ctor.body.push new Literal "#{name}.__super__.constructor.apply(this, arguments)" if @parent
-      @ctor.body.push new Literal "#{@externalCtor}.apply(this, arguments)" if @externalCtor
+      unless o.google
+        @ctor.body.push new Literal "#{name}.__super__.constructor.apply(this, arguments)" if @parent
+        @ctor.body.push new Literal "#{@externalCtor}.apply(this, arguments)" if @externalCtor
       @body.expressions.unshift @ctor
     @ctor.ctor     = @ctor.name = name
     @ctor.klass    = null
     @ctor.noReturn = yes
+    # This is added for the benefit of --google.
+    @ctor.ctorParent = @parent
 
   # Instead of generating the JavaScript string directly, we build up the
   # equivalent syntax tree and compile that, in pieces. You can see the
@@ -906,15 +910,18 @@ exports.Class = class Class extends Base
 
     @setContext name
     @walkBody name, o
-    @ensureConstructor name
-    @body.expressions.unshift new Extends lname, @parent if @parent
+    @ensureConstructor name, o
+    @body.expressions.unshift new Extends lname, @parent if @parent and not o.google
     @body.expressions.unshift @ctor unless @ctor instanceof Code
     @body.expressions.push lname
     @addBoundFunctions o
 
-    klass = new Parens Closure.wrap(@body), true
-    klass = new Assign @variable, klass if @variable
-    klass.compile o
+    if o.google
+      @body.compile o
+    else
+      klass = new Parens Closure.wrap(@body), true
+      klass = new Assign @variable, klass if @variable
+      klass.compile o
 
 #### Assign
 
@@ -1114,13 +1121,33 @@ exports.Code = class Code extends Base
     idt   = o.indent
     isGoogleConstructor = o.google and @ctor
     if isGoogleConstructor
-      code = "/** @constructor */\n#{@tab}#{@name} = function" 
+      if @ctorParent
+        parentClassName = @ctorParent.compile o
+        extendsJsDoc = "#{@tab} * @extends {#{parentClassName}}\n"
+      else
+        extendsJsDoc = '' 
+      code = """
+             goog.provide('#{@name}');
+             
+             #{@tab}/**
+             #{@tab} * @constructor
+             #{extendsJsDoc}#{@tab} */
+             #{@tab}#{@name} = function""" 
     else
       code  = 'function'
       code  += ' ' + @name if @ctor
     code  += '(' + vars.join(', ') + ') {'
     code  += "\n#{ @body.compileWithDeclarations o }\n#{@tab}" unless @body.isEmpty()
-    code  += if isGoogleConstructor then '};' else '}'
+    
+    if isGoogleConstructor
+      code += '};'
+      if @ctorParent
+        extendsNode = new Extends (new Literal @name), @ctorParent
+        code += '\n' + extendsNode.compile(o) + ';'
+      code += '\n'
+    else
+      code += '}'
+
     return @tab + code if @ctor
     return utility('bind') + "(#{code}, #{@context})" if @bound
     if @front or (o.level >= LEVEL_ACCESS) then "(#{code})" else code

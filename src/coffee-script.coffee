@@ -34,7 +34,9 @@ exports.helpers = require './helpers'
 # compiler.
 exports.compile = compile = (code, options = {}) ->
   try
-    (parser.parse lexer.tokenize code).compile options
+    js = (parser.parse lexer.tokenize code).compile options
+    # Files should end with a newline.
+    js + '\n'
   catch err
     err.message = "In #{options.filename}, #{err.message}" if options.filename
     throw err
