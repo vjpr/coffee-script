@@ -3,6 +3,7 @@
 #       properties so the code can be compiled in Advanced mode.
 # TODO: Make sure that everything in nodes.UTILITIES uses a Closure Library
 #       equivalent when --google is used.
+# TODO: Support enums.
 
 class example.people.Person extends example.people.AbstractPerson
 
