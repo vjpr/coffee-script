@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>CoffeeScript/Google Closure Demo</title>
+  <style>
+body {
+  font: 13px Helvetica, Arial, sans-serif;
+  margin: 8px;
+}
+
+h1 {
+  font-size: 18px;
+}
+
+code {
+  color: green;
+}
+
+.intro {
+  width: 700px;
+}
+
+.control-container {
+  display: inline-block;
+}
+
+.error-container {
+  text-align: center;
+}
+
+.controls {
+  padding-bottom: 3px;
+}
+
+#error {
+  color: white;
+  background: #A00;
+  font-weight: bold;
+  padding: 4px;
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+}
+
+.error {
+  color: #A00;
+}
+  </style>
+</head>
+<body>
+
+<h1>CoffeeScript to Closure</h1>
+
+<div class="intro">
+This is a demo of translating CoffeeScript to Closure-Compiler-friendly
+JavaScript.
+<p>
+One of the primary complaints about the Closure Library is
+about how verbose it is, so one way to address this problem is
+to generate Closure-Library-style code using a more minimalistic
+syntax (i.e. CoffeeScript). This makes it possible to leverage the
+<a href="http://code.google.com/closure/compiler/docs/api-tutorial3.html">
+Advanced mode</a> of the Closure Compiler (and the existing functions in the
+Closure Library) while writing much less code.
+This demo is powered by a <a href="https://github.com/bolinfest/coffee-script">
+fork of the CoffeeScript codebase</a> that adds a <code>--google</code> option to
+the <code>coffee</code> executable to generate the Closure-style JavaScript.
+</div>
+
+<div class="control-container">
+
+  <div>
+    <div class="error-container">
+      <span id="error"></span>
+    </div>
+    <div class="controls">
+      <label>
+        <input id="enable-google" type="checkbox" checked> Generate Google-Closure style JavaScript 
+      </label>
+    </div>
+  </div>
+
+  <div id="code-container">
+  <textarea id="code-coffee" cols="60">
+class example.Person
+
+  constructor: (@first, @last) ->
+
+  getFirst: -> @first
+
+  setFirst: (first) -> @first = first
+
+  getLast: -> @last
+
+  setLast: (last) -> @last = last
+
+  toString: ->
+    "#{@first} #{@last}"
+
+
+class example.Adult extends example.Person
+
+  constructor: (first, last) ->
+    super(first, last)
+
+  toString: ->
+    "I am an adult named " + super()
+  </textarea>
+  <textarea id="code-js" cols="60"></textarea>
+  </div>
+
+</div>
+
+<script src="../../extras/coffee-script.js"></script>
+<script src="http://resources.programmingclosure.com/closure-lite.js"></script>
+<script src="demo.js"></script>
+
+</body>
+</html>

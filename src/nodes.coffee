@@ -500,12 +500,14 @@ exports.Call = class Call extends Base
     if o.google
       if method.klass
         (new Value (new Literal method.klass), [new Access(new Literal "superClass_"), new Access new Literal name]).compile o
-      else
+      else if method.ctorParent
         # This is a call to the superclass constructor.
         # Although the technique used by CoffeeScript (__super__.constructor)
         # should also work for Closure, we use a slightly different style for
         # consistency with existing Closure Library code.
         method.ctorParent.compile o
+      else
+        throw SyntaxError "super() called without a parent class"
     else
       if method.klass
         (new Value (new Literal method.klass), [new Access(new Literal "__super__"), new Access new Literal name]).compile o
