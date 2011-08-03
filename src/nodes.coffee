@@ -233,6 +233,35 @@ exports.Block = class Block extends Base
     o.scope  = new Scope null, this, null
     o.level  = LEVEL_TOP
     code     = @compileWithDeclarations o
+    if o.google
+      provides = o.google.provides
+      provides.sort()
+      provides = ("goog.provide('#{name}');" for name in provides)
+      provides = provides.join '\n'
+      
+      includes = o.google.includes
+      comparator = (a, b) -> a.name.localeCompare(b.name)
+      includes.sort comparator
+      includesJs = ("goog.require(#{inc.name});" for inc in includes)
+      includesJs = includesJs.join '\n'
+      
+      aliases = (inc for inc in includes when inc.alias)
+      aliases.sort comparator
+      idt = @tab + TAB
+      aliases = ("#{idt}var #{inc.alias} = #{inc.name};" for inc in aliases)
+      aliases = aliases.join '\n'
+
+      code = """
+             #{provides}
+             
+             #{includesJs}
+             
+             goog.scope(function() {
+             #{aliases}
+             #{code}
+             
+             }); // close goog.scope()
+             """
     if o.bare then code else "(function() {\n#{code}\n}).call(this);\n"
 
   # Compile the expressions body for the contents of a function, with
@@ -1123,14 +1152,12 @@ exports.Code = class Code extends Base
     if isGoogleConstructor
       if @ctorParent
         parentClassName = @ctorParent.compile o
+        o.google.includes.push {name: "'#{parentClassName}'", alias: null}
         extendsJsDoc = "#{@tab} * @extends {#{parentClassName}}\n"
-        requireSuper = "goog.require('#{parentClassName}');\n"
       else
         extendsJsDoc = ''
-        requireSuper = '' 
+      o.google.provides.push @name
       code = """
-             #{requireSuper}goog.provide('#{@name}');
-             
              #{@tab}/**
              #{@tab} * @constructor
              #{extendsJsDoc}#{@tab} */
@@ -1479,6 +1506,16 @@ exports.Throw = class Throw extends Base
 
   compileNode: (o) ->
     @tab + "throw #{ @expression.compile o };"
+
+#### Import
+
+# Simple node to goog.require() a library.
+exports.Include = class Include extends Base
+  constructor: (@namespace, @alias = null) ->
+
+  compileNode: (o) ->
+    o.google.includes.push {name: @namespace, alias: @alias}
+    ""
 
 #### Existence
 

@@ -5,6 +5,8 @@
 #       equivalent when --google is used.
 # TODO: Support enums.
 
+include 'goog.dom' as dom
+
 class example.people.Person extends example.people.AbstractPerson
 
   constructor: (@first, @last) ->

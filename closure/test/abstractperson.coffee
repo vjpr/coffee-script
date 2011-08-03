@@ -1,6 +1,6 @@
 # This class is used to test out the "synthetic constructor" logic in CoffeeScript.
 
-goog.require 'goog.array'
+include 'goog.array'
 
 class example.people.AbstractPerson
 

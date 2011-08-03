@@ -94,6 +94,7 @@ grammar =
     o 'Assign'
     o 'If'
     o 'Try'
+    o 'Include'
     o 'While'
     o 'For'
     o 'Switch'
@@ -384,6 +385,23 @@ grammar =
   # Throw an exception object.
   Throw: [
     o 'THROW Expression',                       -> new Throw $2
+  ]
+  
+  # An include statement, such as:
+  #
+  # include 'goog.dom'
+  # include 'goog.string' as 'str'
+  #
+  # Ideally, this would just be:
+  #
+  # include goog.dom
+  # include goog.string as str
+  #
+  # TODO: Drop the quotes for the arguments to include when I am more
+  # comfortable with the grammar.
+  Include: [
+    o 'INCLUDE STRING',                         -> new Include $2
+    o 'INCLUDE STRING AS IDENTIFIER',           -> new Include $2, $4
   ]
 
   # Parenthetical expressions. Note that the **Parenthetical** is a **Value**,

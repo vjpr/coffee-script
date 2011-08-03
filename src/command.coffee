@@ -202,7 +202,12 @@ parseOptions = ->
   sources       = o.arguments
 
 # The compile-time options to pass to the CoffeeScript compiler.
-compileOptions = (filename) -> {filename, bare: opts.bare, google: !!opts.google}
+compileOptions = (filename) ->
+  {
+    filename,
+    bare: opts.bare,
+    google: if opts.google then {includes: [], provides: []} else null
+  }
 
 # Start up a new Node.js instance with the arguments in `--nodejs` passed to
 # the `node` binary, preserving the other options.

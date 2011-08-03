@@ -4,10 +4,14 @@
 
 # In order to iterate on this, it is probably best to run the following:
 #
-# git checkout lib/*.js && bin/cake build && ./test-closure.sh
+# git checkout lib/*.js && bin/cake build && bin/cake build:parser && ./test-closure.sh
 #
 # This way, if there is an error during the build, `git checkout` is used to
 # "reset" the build so that it is possible to rebuild.
+#
+# Also, it appears to be important to regenerate grammar.js before building the
+# parser. (Writing the build tools in the language you are building can get
+# confusing sometimes.)
 
 set -e
 mkdir -p build/closure/test
