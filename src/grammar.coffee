@@ -387,21 +387,18 @@ grammar =
     o 'THROW Expression',                       -> new Throw $2
   ]
   
-  # An include statement, such as:
-  #
-  # include 'goog.dom'
-  # include 'goog.string' as 'str'
-  #
-  # Ideally, this would just be:
+  # An include statement, in either of the following forms:
   #
   # include goog.dom
-  # include goog.string as str
-  #
-  # TODO: Drop the quotes for the arguments to include when I am more
-  # comfortable with the grammar.
+  # include goog.dom.TagName as TagName
   Include: [
-    o 'INCLUDE STRING',                         -> new Include $2
-    o 'INCLUDE STRING AS IDENTIFIER',           -> new Include $2, $4
+    o 'INCLUDE Namespace',                      -> new Include $2
+    o 'INCLUDE Namespace AS IDENTIFIER',        -> new Include $2, $4
+  ]
+  
+  Namespace: [
+    o 'IDENTIFIER',                             -> new Namespace $1
+    o 'Namespace . IDENTIFIER',                 -> new Namespace $3, $1
   ]
 
   # Parenthetical expressions. Note that the **Parenthetical** is a **Value**,

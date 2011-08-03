@@ -242,7 +242,7 @@ exports.Block = class Block extends Base
       includes = o.google.includes
       comparator = (a, b) -> a.name.localeCompare(b.name)
       includes.sort comparator
-      includesJs = ("goog.require(#{inc.name});" for inc in includes)
+      includesJs = ("goog.require('#{inc.name}');" for inc in includes)
       includesJs = includesJs.join '\n'
       
       aliases = (inc for inc in includes when inc.alias)
@@ -1152,7 +1152,7 @@ exports.Code = class Code extends Base
     if isGoogleConstructor
       if @ctorParent
         parentClassName = @ctorParent.compile o
-        o.google.includes.push {name: "'#{parentClassName}'", alias: null}
+        o.google.includes.push {name: parentClassName, alias: null}
         extendsJsDoc = "#{@tab} * @extends {#{parentClassName}}\n"
       else
         extendsJsDoc = ''
@@ -1507,15 +1507,34 @@ exports.Throw = class Throw extends Base
   compileNode: (o) ->
     @tab + "throw #{ @expression.compile o };"
 
-#### Import
+#### Include
 
 # Simple node to goog.require() a library.
 exports.Include = class Include extends Base
   constructor: (@namespace, @alias = null) ->
 
   compileNode: (o) ->
-    o.google.includes.push {name: @namespace, alias: @alias}
+    o.google.includes.push {name: @namespace.flatten(), alias: @alias}
     ""
+
+#### Namespace
+
+# A chain of identifiers that form a namespace.
+# For example, the namespace goog.dom.TagName is a chain of three identifiers:
+# TagName, dom, and goog. 
+exports.Namespace = class Namespace extends Base
+  constructor: (@identifier, @namespace = null) ->
+  
+  flatten: ->
+    ns = @namespace
+    ids = [@identifier]
+    while ns
+      ids.unshift ns.identifier
+      ns = ns.namespace
+    ids.join '.'
+
+  compileNode: (o) ->
+    @flatten()
 
 #### Existence
 
