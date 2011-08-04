@@ -88,11 +88,11 @@ demo.createEditors = function() {
   coffeeEditor.getSession().setTabSize(2);
   coffeeEditor.getSession().setUseSoftTabs(false);
   coffeeEditor.renderer.setHScrollBarAlwaysVisible(false);
-//  var CoffeeMode = require("ace/mode/coffee").Mode;
-//  coffeeEditor.getSession().setMode(CoffeeMode);
-//
-//  var JavaScriptMode = require("ace/mode/javascript").Mode;
-//  jsEditor.getSession().setMode(JavaScriptMode);
+  var CoffeeMode = require("ace/mode/coffee").Mode;
+  coffeeEditor.getSession().setMode(new CoffeeMode());
+
+  var JavaScriptMode = require("ace/mode/javascript").Mode;
+  jsEditor.getSession().setMode(new JavaScriptMode());
   jsEditor.setReadOnly(true);
   jsEditor.renderer.setHScrollBarAlwaysVisible(false);
 };
