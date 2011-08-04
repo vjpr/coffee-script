@@ -63,8 +63,8 @@ code {
 <h1>CoffeeScript to Closure</h1>
 
 <div class="intro">
-This is a demo of translating CoffeeScript to Closure-Compiler-friendly
-JavaScript.
+This is a demo of translating <a href="http://jashkenas.github.com/coffee-script/">CoffeeScript</a>
+to Closure-Compiler-friendly JavaScript.
 <p>
 One of the primary complaints about the Closure Library is
 about how verbose it is, so one way to address this problem is
@@ -85,9 +85,17 @@ the <code>coffee</code> executable to generate the Closure-style JavaScript.
       <span id="error"></span>
     </div>
     <div class="controls">
-      <label>
-        <input id="enable-google" type="checkbox" checked> Generate Google-Closure style JavaScript 
-      </label>
+      <div style="float: left">
+        <b>Edit CoffeeScript code on the left and JavaScript will
+        automatically be generated on the right.</b>
+      </div>
+      <div style="float:right">
+        <label>
+          <input id="enable-google" type="checkbox" checked>
+              Generate Google-Closure style JavaScript 
+        </label>
+      </div>
+      <div style="clear:both"></div>
     </div>
   </div>
 
@@ -126,6 +134,7 @@ class example.Adult extends example.Person
 <script src="http://bolinfest.com/ace/src/ace.js" charset="utf-8"></script>
 <script src="http://bolinfest.com/ace/src/mode-coffee.js" charset="utf-8"></script>
 <script src="http://bolinfest.com/ace/src/mode-javascript.js" charset="utf-8"></script>
+<script src="http://bolinfest.com/ace/src/theme-twilight.js" charset="utf-8"></script>
 <script src="http://resources.programmingclosure.com/closure-lite.js"></script>
 <script src="demo.js"></script>
 

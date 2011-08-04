@@ -85,13 +85,14 @@ demo.createEditors = function() {
   var jsEditor = demo.jsEditor =
       ace.edit(get('code-js').firstChild);
 
+  var CoffeeMode = require("ace/mode/coffee").Mode;
+  coffeeEditor.getSession().setMode(new CoffeeMode());
   coffeeEditor.getSession().setTabSize(2);
   coffeeEditor.getSession().setUseSoftTabs(false);
   coffeeEditor.renderer.setHScrollBarAlwaysVisible(false);
-  var CoffeeMode = require("ace/mode/coffee").Mode;
-  coffeeEditor.getSession().setMode(new CoffeeMode());
 
   var JavaScriptMode = require("ace/mode/javascript").Mode;
+  jsEditor.setTheme("ace/theme/twilight");
   jsEditor.getSession().setMode(new JavaScriptMode());
   jsEditor.setReadOnly(true);
   jsEditor.renderer.setHScrollBarAlwaysVisible(false);
@@ -99,7 +100,7 @@ demo.createEditors = function() {
 
 
 demo.init = function() {
-  // Make sure the editor div takes up space before
+  // Make sure the editor divs takes up space before creating the editors.
   goog.events.listen(
       window,
       goog.events.EventType.RESIZE,
