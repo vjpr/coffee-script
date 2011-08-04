@@ -188,7 +188,7 @@ exports.Block = class Block extends Base
     for exp in @expressions
       return exp if exp.jumps o
 
-  # An Block node does not return its entire body, rather it
+  # A Block node does not return its entire body, rather it
   # ensures that the final expression is returned.
   makeReturn: ->
     len = @expressions.length
@@ -200,7 +200,7 @@ exports.Block = class Block extends Base
         break
     this
 
-  # An **Block** is the only node that can serve as the root.
+  # A **Block** is the only node that can serve as the root.
   compile: (o = {}, level) ->
     if o.scope then super o, level else @compileRoot o
 
@@ -214,7 +214,12 @@ exports.Block = class Block extends Base
     for node in @expressions
       node = node.unwrapAll()
       node = (node.unfoldSoak(o) or node)
-      if top
+      if node instanceof Block
+        # This is a nested block.  We don't do anything special here like enclose
+        # it in a new scope; we just compile the statements in this block along with
+        # our own
+        codes.push node.compileNode o
+      else if top
         node.front = true
         code = node.compile o
         codes.push if node.isStatement o then code else @tab + code + ';'
@@ -289,7 +294,7 @@ exports.Block = class Block extends Base
         code += "#{@tab}var #{ multident scope.assignedVariables().join(', '), @tab };\n"
     code + post
 
-  # Wrap up the given nodes as an **Block**, unless it already happens
+  # Wrap up the given nodes as a **Block**, unless it already happens
   # to be one.
   @wrap: (nodes) ->
     return nodes[0] if nodes.length is 1 and nodes[0] instanceof Block
@@ -412,7 +417,7 @@ exports.Value = class Value extends Base
     name = last @properties
     if @properties.length < 2 and not @base.isComplex() and not name?.isComplex()
       return [this, this]  # `a` `a.b`
-    base = new Value @base, @properties.slice 0, -1
+    base = new Value @base, @properties[...-1]
     if base.isComplex()  # `a().b`
       bref = new Literal o.scope.freeVariable 'base'
       base = new Value new Parens new Assign bref, base
@@ -444,8 +449,8 @@ exports.Value = class Value extends Base
         return ifn
       for prop, i in @properties when prop.soak
         prop.soak = off
-        fst = new Value @base, @properties.slice 0, i
-        snd = new Value @base, @properties.slice i
+        fst = new Value @base, @properties[...i]
+        snd = new Value @base, @properties[i..]
         if fst.isComplex()
           ref = new Literal o.scope.freeVariable 'ref'
           fst = new Parens new Assign ref, fst
@@ -556,7 +561,7 @@ exports.Call = class Call extends Base
         continue
       obj = null
       for prop in node.base.properties
-        if prop instanceof Assign
+        if prop instanceof Assign or prop instanceof Comment
           nodes.push obj = new Obj properties = [], true if not obj
           properties.push prop
         else
@@ -881,7 +886,7 @@ exports.Class = class Class extends Base
   # Merge the properties from a top-level object as prototypal properties
   # on the class.
   addProperties: (node, name, o) ->
-    props = node.base.properties.slice 0
+    props = node.base.properties[0..]
     exprs = while assign = props.shift()
       if assign instanceof Assign
         base = assign.variable.base
@@ -1076,7 +1081,7 @@ exports.Assign = class Assign extends Base
   compileConditional: (o) ->
     [left, rite] = @variable.cacheReference o
     if "?" in @context then o.isExistentialEquals = true
-    new Op(@context.slice(0, -1), left, new Assign(rite, @value, '=') ).compile o
+    new Op(@context[0...-1], left, new Assign(rite, @value, '=') ).compile o
 
   # Compile the assignment from an array splice literal, using JavaScript's
   # `Array#splice` method.
@@ -1117,7 +1122,7 @@ exports.Code = class Code extends Base
 
   # Compilation creates a new scope unless explicitly asked to share with the
   # outer scope. Handles splat parameters in the parameter list by peeking at
-  # the JavaScript `arguments` objects. If the function is bound with the `=>`
+  # the JavaScript `arguments` object. If the function is bound with the `=>`
   # arrow, generates a wrapper that saves the current value of `this` through
   # a closure.
   compileNode: (o) ->
@@ -1235,7 +1240,7 @@ exports.Splat = class Splat extends Base
   compile: (o) ->
     if @index? then @compileParam o else @name.compile o
 
-  # Utility function that converts arbitrary number of elements, mixed with
+  # Utility function that converts an arbitrary number of elements, mixed with
   # splats, to a proper array.
   @compileSplattedArray: (o, list, apply) ->
     index = -1
@@ -1245,14 +1250,14 @@ exports.Splat = class Splat extends Base
       code = list[0].compile o, LEVEL_LIST
       return code if apply
       return "#{ utility 'slice' }.call(#{code})"
-    args = list.slice index
+    args = list[index..]
     for node, i in args
       code = node.compile o, LEVEL_LIST
       args[i] = if node instanceof Splat
       then "#{ utility 'slice' }.call(#{code})"
       else "[#{code}]"
-    return args[0] + ".concat(#{ args.slice(1).join ', ' })" if index is 0
-    base = (node.compile o, LEVEL_LIST for node in list.slice 0, index)
+    return args[0] + ".concat(#{ args[1..].join ', ' })" if index is 0
+    base = (node.compile o, LEVEL_LIST for node in list[0...index])
     "[#{ base.join ', ' }].concat(#{ args.join ', ' })"
 
 #### While
@@ -1691,7 +1696,6 @@ exports.For = class For extends Base
       base  = new Value ref
       if val.base
         [val.base, base] = [base, val]
-        args.unshift new Literal 'this'
       body.expressions[idx] = new Call base, expr.args
       defs += @tab + new Assign(ref, fn).compile(o, LEVEL_TOP) + ';\n'
     defs
@@ -1779,7 +1783,7 @@ exports.If = class If extends Base
   ensureBlock: (node) ->
     if node instanceof Block then node else new Block [node]
 
-  # Compile the **If** as a regular *if-else* statement. Flattened chains
+  # Compile the `If` as a regular *if-else* statement. Flattened chains
   # force inner *else* bodies into statement form.
   compileStatement: (o) ->
     child    = del o, 'chainChild'
@@ -1802,7 +1806,7 @@ exports.If = class If extends Base
     else
       "{\n#{ @elseBody.compile o, LEVEL_TOP }\n#{@tab}}"
 
-  # Compile the If as a conditional operator.
+  # Compile the `If` as a conditional operator.
   compileExpression: (o) ->
     cond = @condition.compile o, LEVEL_COND
     body = @bodyNode().compile o, LEVEL_LIST
@@ -1898,7 +1902,7 @@ UTILITIES =
   hasProp: 'Object.prototype.hasOwnProperty'
   slice  : 'Array.prototype.slice'
 
-# Levels indicates a node's position in the AST. Useful for knowing if
+# Levels indicate a node's position in the AST. Useful for knowing if
 # parens are necessary or superfluous.
 LEVEL_TOP    = 1  # ...;
 LEVEL_PAREN  = 2  # (...)
