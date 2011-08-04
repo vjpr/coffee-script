@@ -43,7 +43,18 @@ code {
 }
 
 .error {
-  color: #A00;
+  color: #A00 !important;
+}
+
+#code-coffee, #code-js {
+  display: inline-block;
+  border-color: #E8E8E8;
+  border-style: solid;
+  border-width: 1px 0;
+}
+
+#code-coffee, #code-js, #code-coffee > div, #code-js > div {
+  width: 500px;
 }
   </style>
 </head>
@@ -81,8 +92,8 @@ the <code>coffee</code> executable to generate the Closure-style JavaScript.
   </div>
 
   <div id="code-container">
-  <textarea id="code-coffee" cols="60">
-class example.Person
+    <div id="code-coffee"><div
+>class example.Person
 
   constructor: (@first, @last) ->
 
@@ -105,13 +116,16 @@ class example.Adult extends example.Person
 
   toString: ->
     "I am an adult named " + super()
-  </textarea>
-  <textarea id="code-js" cols="60"></textarea>
+</div></div>
+    <div id="code-js"><div></div></div>
   </div>
 
 </div>
 
 <script src="../../extras/coffee-script.js"></script>
+<script src="http://bolinfest.com/ace/src/ace.js" charset="utf-8"></script>
+<script src="http://bolinfest.com/ace/src/mode-coffee.js" charset="utf-8"></script>
+<script src="http://bolinfest.com/ace/src/mode-javascript.js" charset="utf-8"></script>
 <script src="http://resources.programmingclosure.com/closure-lite.js"></script>
 <script src="demo.js"></script>
 

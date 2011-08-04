@@ -5,8 +5,6 @@ goog.require('goog.dom');
 goog.require('goog.dom.classes');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
-goog.require('goog.events.KeyHandler');
-goog.require('goog.events.KeyHandler.EventType');
 goog.require('goog.string');
 goog.require('goog.style');
 
@@ -37,7 +35,7 @@ demo.onResize = function(e) {
   if (height < 0) return;
 
   // Set the height of the textareas.
-  var textareas = [get('code-coffee'), get('code-js')];
+  var textareas = [get('code-coffee').firstChild, get('code-js').firstChild];
   goog.array.forEach(textareas, function(textarea) {
     textarea.style.height = height;  
   });
@@ -48,7 +46,7 @@ demo.onResize = function(e) {
  * Compile the code in the input pane and print it in the output pane.
  */
 demo.compile = function() {
-  var input = get('code-coffee').value;
+  var input = demo.coffeeEditor.getSession().getValue();
   var checkbox = get('enable-google');
   var options = {
     bare: true,
@@ -59,7 +57,7 @@ demo.compile = function() {
   var error;
   try {
     value = CoffeeScript.compile(input, options);
-    get('code-js').value = value;
+    demo.jsEditor.getSession().setValue(value);
   } catch (e) {
     error = e;
     get('error').innerHTML = goog.string.htmlEscape(e.message);
@@ -68,30 +66,57 @@ demo.compile = function() {
   // Update the UI to reflect whether there is an error. 
   var isError = (error != null);
   get('error').style.visibility = isError ? 'visible' : 'hidden';
+  // TOOD(bolinfest): Figure out why the text does not turn red.
   goog.dom.classes.enable(get('code-coffee'), 'error', isError);
 };
 
 
+/** @type {ace.Editor} */
+demo.coffeeEditor;
+
+
+/** @type {ace.Editor} */
+demo.jsEditor;
+
+
+demo.createEditors = function() {
+  var coffeeEditor = demo.coffeeEditor =
+      ace.edit(get('code-coffee').firstChild);
+  var jsEditor = demo.jsEditor =
+      ace.edit(get('code-js').firstChild);
+
+  coffeeEditor.getSession().setTabSize(2);
+  coffeeEditor.getSession().setUseSoftTabs(false);
+  coffeeEditor.renderer.setHScrollBarAlwaysVisible(false);
+//  var CoffeeMode = require("ace/mode/coffee").Mode;
+//  coffeeEditor.getSession().setMode(CoffeeMode);
+//
+//  var JavaScriptMode = require("ace/mode/javascript").Mode;
+//  jsEditor.getSession().setMode(JavaScriptMode);
+  jsEditor.setReadOnly(true);
+  jsEditor.renderer.setHScrollBarAlwaysVisible(false);
+};
+
+
 demo.init = function() {
+  // Make sure the editor div takes up space before
   goog.events.listen(
       window,
       goog.events.EventType.RESIZE,
       demo.onResize);
-  
+  demo.onResize();
+
+  demo.createEditors();
+
   var compileAfterCurrentThread = function() { setTimeout(demo.compile, 0); };
 
   goog.events.listen(
       get('enable-google'),
       goog.events.EventType.CHANGE,
       compileAfterCurrentThread);
-  
-  var keyHandler = new goog.events.KeyHandler(get('code-coffee'));
-  goog.events.listen(
-      keyHandler,
-      goog.events.KeyHandler.EventType.KEY,
-      compileAfterCurrentThread);
+ 
+  demo.coffeeEditor.getSession().on('change', compileAfterCurrentThread);
 
-  demo.onResize();
   demo.compile();
 };
 
