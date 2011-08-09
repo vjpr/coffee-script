@@ -241,13 +241,18 @@ exports.Block = class Block extends Base
     if o.google
       provides = o.google.provides
       provides.sort()
-      provides = ("goog.provide('#{name}');" for name in provides)
-      provides = provides.join '\n'
+      providesJs = ("goog.provide('#{name}');" for name in provides)
+      providesJs = providesJs.join '\n'
       
       includes = o.google.includes
       comparator = (a, b) -> a.name.localeCompare(b.name)
       includes.sort comparator
-      includesJs = ("goog.require('#{inc.name}');" for inc in includes)
+      # Sometimes a file may try to both provide and require the same namespace,
+      # e.g., a class and its subclass are declared in the same file. When this
+      # happens, the goog.require() statement should not be included, though it
+      # may have an alias within the goog.scope() call.
+      includesJs = ("goog.require('#{inc.name}');" for inc in includes \
+          when provides.indexOf(inc.name) == -1)
       includesJs = includesJs.join '\n'
       
       aliases = (inc for inc in includes when inc.alias)
@@ -257,7 +262,7 @@ exports.Block = class Block extends Base
       aliases = aliases.join '\n'
 
       code = """
-             #{provides}
+             #{providesJs}
              
              #{includesJs}
              
