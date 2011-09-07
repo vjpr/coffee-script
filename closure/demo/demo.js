@@ -47,10 +47,12 @@ demo.onResize = function(e) {
  */
 demo.compile = function() {
   var input = demo.coffeeEditor.getSession().getValue();
-  var checkbox = get('enable-google');
+  var checkbox_google = get('enable-google');
+  var checkbox_closure = get('enable-closure');
   var options = {
     bare: true,
-    google: checkbox.checked ? {includes: [], provides: []} : null
+    google: checkbox_google.checked,
+    closure: checkbox_closure.checked
   };
 
   var value = '';

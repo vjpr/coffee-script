@@ -633,11 +633,11 @@ exports.Extends = class Extends extends Base
   # Hooks one constructor into another's prototype chain.
   compile: (o) ->
     unless o.google
-      utility 'hasProp'
+      utility 'hasProp', o
     if o.google
       inheritsFunction = new Value(new Literal 'goog.inherits') 
     else
-      inheritsFunction = new Value(new Literal utility 'extends')
+      inheritsFunction = new Value(new Literal utility 'extends', o)
     new Call(inheritsFunction, [@child, @parent]).compile o
 
 #### Access
@@ -862,7 +862,7 @@ exports.Class = class Class extends Base
   # Figure out the appropriate name for the constructor function of this class.
   determineName: (o) ->
     return null unless @variable
-    return @variable.compile o if o.google
+    return @variable.compile o if o.google or o.closure
     decl = if tail = last @variable.properties
       tail instanceof Access and tail.name.value
     else
@@ -886,7 +886,7 @@ exports.Class = class Class extends Base
     if @boundFuncs.length
       for bvar in @boundFuncs
         lhs = (new Value (new Literal "this"), [new Access bvar]).compile o
-        @ctor.body.unshift new Literal "#{lhs} = #{utility 'bind'}(#{lhs}, this)"
+        @ctor.body.unshift new Literal "#{lhs} = #{utility 'bind', o}(#{lhs}, this)"
 
   # Merge the properties from a top-level object as prototypal properties
   # on the class.
@@ -952,12 +952,12 @@ exports.Class = class Class extends Base
     @setContext name
     @walkBody name, o
     @ensureConstructor name, o
-    @body.expressions.unshift new Extends lname, @parent if @parent and not o.google
+    @body.expressions.unshift new Extends lname, @parent if @parent and not o.google and not o.closure
     @body.expressions.unshift @ctor unless @ctor instanceof Code
-    @body.expressions.push lname unless o.google
+    @body.expressions.push lname unless (o.google or o.closure)
     @addBoundFunctions o
 
-    if o.google
+    if o.google or o.closure
       @body.compile o
     else
       klass = new Parens Closure.wrap(@body), true
@@ -1056,7 +1056,7 @@ exports.Assign = class Assign extends Base
           else
             idx = if obj.this then obj.properties[0].name else obj
       if not splat and obj instanceof Splat
-        val = "#{olen} <= #{vvar}.length ? #{ utility 'slice' }.call(#{vvar}, #{i}"
+        val = "#{olen} <= #{vvar}.length ? #{ utility 'slice', o }.call(#{vvar}, #{i}"
         if rest = olen - i - 1
           ivar = o.scope.freeVariable 'i'
           val += ", #{ivar} = #{vvar}.length - #{rest}) : (#{ivar} = #{i}, [])"
@@ -1160,20 +1160,25 @@ exports.Code = class Code extends Base
     o.scope.parameter vars[i] = v.compile o for v, i in vars unless splats
     @body.makeReturn() unless wasEmpty or @noReturn
     idt   = o.indent
-    isGoogleConstructor = o.google and @ctor
+    isGoogleConstructor = (o.google or o.closure) and @ctor
     if isGoogleConstructor
       if @ctorParent
         parentClassName = @ctorParent.compile o
-        o.google.includes.push {name: parentClassName, alias: null}
+        o.google?.includes.push {name: parentClassName, alias: null}
         extendsJsDoc = "#{@tab} * @extends {#{parentClassName}}\n"
       else
         extendsJsDoc = ''
-      o.google.provides.push @name
+      o.google?.provides.push @name
       code = """
              #{@tab}/**
              #{@tab} * @constructor
-             #{extendsJsDoc}#{@tab} */
-             #{@tab}#{@name} = function""" 
+             #{extendsJsDoc}#{@tab} */"""
+      if o.closure
+        # include var declaration for google without closure
+        code += "\nvar #{@tab}#{@name} = function"
+      else
+        # no var declaration
+        code += "\n#{@tab}#{@name} = function"
     else
       code  = 'function'
       code  += ' ' + @name if @ctor
@@ -1190,7 +1195,7 @@ exports.Code = class Code extends Base
       code += '}'
 
     return @tab + code if @ctor
-    return utility('bind') + "(#{code}, #{@context})" if @bound
+    return utility('bind', o) + "(#{code}, #{@context})" if @bound
     if @front or (o.level >= LEVEL_ACCESS) then "(#{code})" else code
 
   # Short-circuit `traverseChildren` method to prevent it from crossing scope boundaries
@@ -1254,12 +1259,12 @@ exports.Splat = class Splat extends Base
     if list.length is 1
       code = list[0].compile o, LEVEL_LIST
       return code if apply
-      return "#{ utility 'slice' }.call(#{code})"
+      return "#{ utility 'slice', o }.call(#{code})"
     args = list[index..]
     for node, i in args
       code = node.compile o, LEVEL_LIST
       args[i] = if node instanceof Splat
-      then "#{ utility 'slice' }.call(#{code})"
+      then "#{ utility 'slice', o }.call(#{code})"
       else "[#{code}]"
     return args[0] + ".concat(#{ args[1..].join ', ' })" if index is 0
     base = (node.compile o, LEVEL_LIST for node in list[0...index])
@@ -1460,7 +1465,7 @@ exports.In = class In extends Base
 
   compileLoopTest: (o) ->
     [sub, ref] = @object.cache o, LEVEL_LIST
-    code = utility('indexOf') + ".call(#{ @array.compile o, LEVEL_LIST }, #{ref}) " +
+    code = utility('indexOf', o) + ".call(#{ @array.compile o, LEVEL_LIST }, #{ref}) " +
            if @negated then '< 0' else '>= 0'
     return code if sub is ref
     code = sub + ', ' + code
@@ -1526,7 +1531,7 @@ exports.Include = class Include extends Base
   constructor: (@namespace, @alias = null) ->
 
   compileNode: (o) ->
-    o.google.includes.push {name: @namespace.flatten(), alias: @alias}
+    o.google?.includes.push {name: @namespace.flatten(), alias: @alias}
     ""
 
 #### Namespace
@@ -1678,7 +1683,7 @@ exports.For = class For extends Base
     varPart     = "\n#{idt1}#{namePart};" if namePart
     if @object
       forPart   = "#{ivar} in #{svar}"
-      guardPart = "\n#{idt1}if (!#{utility('hasProp')}.call(#{svar}, #{ivar})) continue;" if @own
+      guardPart = "\n#{idt1}if (!#{utility('hasProp', o)}.call(#{svar}, #{ivar})) continue;" if @own
     body        = body.compile merge(o, indent: idt1), LEVEL_TOP
     body        = '\n' + body + '\n' if body
     """
@@ -1880,6 +1885,7 @@ UTILITIES =
   extends: '''
     function(child, parent) {
       for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
+      /** @constructor */
       function ctor() { this.constructor = child; }
       ctor.prototype = parent.prototype;
       child.prototype = new ctor;
@@ -1945,9 +1951,9 @@ IS_STRING = /^['"]/
 # -----------------
 
 # Helper for ensuring that utility functions are assigned at the top level.
-utility = (name) ->
+utility = (name, o = {}) ->
   ref = "__#{name}"
-  Scope.root.assign ref, UTILITIES[name]
+  Scope.root.assign ref, UTILITIES[name] unless o.noutil
   ref
 
 multident = (code, tab) ->
