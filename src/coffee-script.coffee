@@ -38,6 +38,8 @@ exports.helpers = require './helpers'
 # compiler.
 exports.compile = compile = (code, options = {}) ->
   try
+    options.google = if options.google then {includes: [], provides: []} else null
+
     js = (parser.parse lexer.tokenize code).compile options
     # Files should end with a newline.
     js + '\n'
