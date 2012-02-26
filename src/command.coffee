@@ -41,6 +41,7 @@ SWITCHES = [
   ['-n', '--nodes',           'print the parse tree that Jison produces']
   [      '--nodejs [ARGS]',   'pass options through to the "node" binary']
   [      '--google',          'format output for Google Closure Tools']
+  [      '--closure',         'format output for Google Closure Tools without Google dependencies']
   ['-v', '--version',         'display CoffeeScript version']
   ['-h', '--help',            'display this help message']
 ]
@@ -225,6 +226,7 @@ compileOptions = (filename) ->
     filename,
     bare: opts.bare,
     google: if opts.google then {includes: [], provides: []} else null
+    closure: opts.closure
   }
 
 # Start up a new Node.js instance with the arguments in `--nodejs` passed to
