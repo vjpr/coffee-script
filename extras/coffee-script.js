@@ -3432,7 +3432,7 @@ if (typeof module !== 'undefined' && require.main === module) {
         }
         code = "" + this.tab + "/**\n" + this.tab + " * @constructor\n" + extendsJsDoc + this.tab + " */";
         if (o.closure) {
-          code += "\nvar " + this.tab + this.name + " = function";
+          code += "\n" + this.tab + this.name + " = function";
         } else {
           code += "\n" + this.tab + this.name + " = function";
         }

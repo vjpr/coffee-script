@@ -1175,7 +1175,10 @@ exports.Code = class Code extends Base
              #{extendsJsDoc}#{@tab} */"""
       if o.closure
         # include var declaration for google without closure
-        code += "\nvar #{@tab}#{@name} = function"
+        # code += "\nvar #{@tab}#{@name} = function"
+        # namespaces = @name.split("\.")
+        # clazz = namespaces[namespaces.length - 1]
+        code += "\n#{@tab}#{@name} = function"
       else
         # no var declaration
         code += "\n#{@tab}#{@name} = function"
