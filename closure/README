@@ -1,0 +1,6 @@
+README
+
+From https://github.com/jashkenas/coffee-script/issues/999:
+
+To compile `extras/coffee-script.js` run `MINIFY=false bin/cake build:browser`
+
