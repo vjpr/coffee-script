@@ -3432,7 +3432,7 @@ if (typeof module !== 'undefined' && require.main === module) {
         if ((_ref7 = o.google) != null) {
           _ref7.provides.push(this.name);
         }
-        if (o.closure_nodoc) {
+        if (!o.closure_nodoc) {
           code = "" + this.tab + "/**\n" + this.tab + " * @constructor\n" + extendsJsDoc + this.tab + " */";
         } else {
           code = "";

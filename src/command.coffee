@@ -228,6 +228,7 @@ compileOptions = (filename) ->
     bare: opts.bare,
     google: if opts.google then {includes: [], provides: []} else null
     closure: opts.closure
+    closure_nodoc: opts.closure_nodoc
   }
 
 # Start up a new Node.js instance with the arguments in `--nodejs` passed to

@@ -1170,7 +1170,7 @@ exports.Code = class Code extends Base
         extendsJsDoc = ''
       o.google?.provides.push @name
 
-      if o.closure_nodoc
+      if not o.closure_nodoc
         code = """
                #{@tab}/**
                #{@tab} * @constructor
