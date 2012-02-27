@@ -1203,7 +1203,7 @@ exports.Code = class Code extends Base
                #{extendsJsDoc}#{@tab} */"""
           
       else
-      
+
         code = ""
 
       if o.closure
@@ -1224,8 +1224,7 @@ exports.Code = class Code extends Base
     # Annotate arguments with default values with inline jsdoc for 
     # Closure optional params and inferred type information
     # TODO: Check if it is already defined in previous comment.
-    o.inferOptional = true
-    if o.closure and o.infer_optional
+    if o.closure and o.closure_infer
       code += '('
       types = []
       for param, i in @params
@@ -1241,7 +1240,6 @@ exports.Code = class Code extends Base
     else
       code  += '(' + vars.join(', ') + ') {'
 
->>>>>>> Stashed changes
     code  += "\n#{ @body.compileWithDeclarations o }\n#{@tab}" unless @body.isEmpty()
     
     if isGoogleConstructor

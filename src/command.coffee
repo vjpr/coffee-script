@@ -43,6 +43,7 @@ SWITCHES = [
   [      '--google',          'format output for Google Closure Tools']
   [      '--closure',         'format output for Google Closure Tools without Google dependencies']
   [      '--closure_nodoc',   'format output for Google Closure Tools without Google dependencies and no jsdoc generation']
+  [      '--closure_infer',   'infer Google Closure types from default syntax features']
   ['-v', '--version',         'display CoffeeScript version']
   ['-h', '--help',            'display this help message']
 ]
@@ -227,8 +228,9 @@ compileOptions = (filename) ->
     filename,
     bare: opts.bare,
     google: if opts.google then {includes: [], provides: []} else null
-    closure: opts.closure
-    closure_nodoc: opts.closure_nodoc
+    closure: opts.closure,
+    closure_nodoc: opts.closure_nodoc,
+    closure_infer: opts.closure_infer
   }
 
 # Start up a new Node.js instance with the arguments in `--nodejs` passed to
