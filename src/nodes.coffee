@@ -853,7 +853,7 @@ exports.Arr = class Arr extends Base
 # Initialize a **Class** with its name, an optional superclass, and a
 # list of prototype property assignments.
 exports.Class = class Class extends Base
-  constructor: (@variable, @parent, @body = new Block) ->
+  constructor: (@variable, @parent, @body = new Block, @comment = null) ->
     @boundFuncs = []
     @body.classBody = yes
 
@@ -940,6 +940,8 @@ exports.Class = class Class extends Base
     @ctor.noReturn = yes
     # This is added for the benefit of --google.
     @ctor.ctorParent = @parent
+    # Sets the comment before the class here
+    #@ctor.comment = @comment
 
   # Instead of generating the JavaScript string directly, we build up the
   # equivalent syntax tree and compile that, in pieces. You can see the
@@ -1171,12 +1173,37 @@ exports.Code = class Code extends Base
       o.google?.provides.push @name
 
       if not o.closure_nodoc
-        code = """
-               #{@tab}/**
+
+        # Add Closure type annotation to constructor    
+        rootScope = o.scope.parent.expressions # contains a single block
+        classBlock = new Block rootScope.expressions # class block
+
+        console.log @ctor
+        console.log "--------------------------------------------------"
+        
+        # Find the node before this node
+        lastNode = null
+        classBlock.contains (node) =>
+          if node.ctor is @ctor
+            return true
+          lastNode = node
+          return false
+
+        if lastNode?.comment?
+          precedingComment = true
+        else
+          precedingComment = false
+        
+        code = ''
+        if not precedingComment
+          code = "#{@tab}/**"
+
+        code += """
                #{@tab} * @constructor
-               #{extendsJsDoc}#{@tab} */
-               """
+               #{extendsJsDoc}#{@tab} */"""
+          
       else
+      
         code = ""
 
       if o.closure
@@ -1194,7 +1221,27 @@ exports.Code = class Code extends Base
       code  = 'function'
       code  += ' ' + @name if @ctor
 
-    code  += '(' + vars.join(', ') + ') {'
+    # Annotate arguments with default values with inline jsdoc for 
+    # Closure optional params and inferred type information
+    # TODO: Check if it is already defined in previous comment.
+    o.inferOptional = true
+    if o.closure and o.infer_optional
+      code += '('
+      types = []
+      for param, i in @params
+        defaultParam = param.value?.base?.value
+        types[i] = @type defaultParam
+      for v, i in vars
+        a = types[i]
+        if v?
+          code += ", " if i > 0
+          code += "/** #{a}= */ " if a isnt 'undefined'
+          code += v
+      code += ') {'
+    else
+      code  += '(' + vars.join(', ') + ') {'
+
+>>>>>>> Stashed changes
     code  += "\n#{ @body.compileWithDeclarations o }\n#{@tab}" unless @body.isEmpty()
     
     if isGoogleConstructor
@@ -1214,6 +1261,23 @@ exports.Code = class Code extends Base
   # unless `crossScope` is `true`.
   traverseChildren: (crossScope, func) ->
     super(crossScope, func) if crossScope
+
+  # Basic type inference
+  type: (o) ->
+    TYPES =
+      'undefined'        : 'undefined',
+      'number'           : 'number',
+      'boolean'          : 'boolean',
+      'string'           : 'string',
+      '[object Function]': 'function',
+      '[object RegExp]'  : 'regexp',
+      '[object Array]'   : 'array',
+      '[object Date]'    : 'date',
+      '[object Error]'   : 'error'
+
+    TOSTRING = Object.prototype.toString
+
+    return TYPES[typeof o] or TYPES[TOSTRING.call(o)] or (o ? 'object' : 'null')
 
 #### Param
 
