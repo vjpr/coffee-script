@@ -28,7 +28,15 @@ class exports.Rewriter
     @addImplicitParentheses()
     @ensureBalance BALANCED_PAIRS
     @rewriteClosingParens()
+    @comments()
     @tokens
+
+  comments: ->
+    for t, i in @tokens
+      if t[0] is 'HERECOMMENT' and @tokens[i+2]?[1] is 'constructor'
+        t[0] = 'CTORCOMMENT'
+    # console.log (t[0] + '/' + t[1] for t in @tokens).join ' '
+    true
 
   # Rewrite the token stream, looking one token ahead and behind.
   # Allow the return value of the block to tell us how many tokens to move

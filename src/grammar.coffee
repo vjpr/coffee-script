@@ -162,8 +162,11 @@ grammar =
   ]
 
   # A block comment.
+  # CTORCOMMENT indicates that a HERECOMMENT is above a constructor so we don't
+  # want to close comment tag if we are in Closure Mode.
   Comment: [
     o 'HERECOMMENT',                            -> new Comment $1
+    o 'CTORCOMMENT',                            -> new Comment $1, true
   ]
 
   # The **Code** node is the function literal. It's defined by an indented block

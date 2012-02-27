@@ -469,13 +469,15 @@ exports.Value = class Value extends Base
 # CoffeeScript passes through block comments as JavaScript block comments
 # at the same position.
 exports.Comment = class Comment extends Base
-  constructor: (@comment) ->
+  constructor: (@comment, @forCtor) ->
 
   isStatement:     YES
   makeReturn:      THIS
 
   compileNode: (o, level) ->
-    code = '/*' + multident(@comment, @tab) + '*/'
+    code = '/*' + multident(@comment, @tab)
+    # Close the comment unless its above a constructor when in closure mode
+    code += '*/' if not @forCtor and o.closure and not o.closure_nodoc
     code = o.indent + code if (level or o.level) is LEVEL_TOP
     code
 
@@ -853,7 +855,7 @@ exports.Arr = class Arr extends Base
 # Initialize a **Class** with its name, an optional superclass, and a
 # list of prototype property assignments.
 exports.Class = class Class extends Base
-  constructor: (@variable, @parent, @body = new Block, @comment = null) ->
+  constructor: (@variable, @parent, @body = new Block) ->
     @boundFuncs = []
     @body.classBody = yes
 
@@ -940,8 +942,6 @@ exports.Class = class Class extends Base
     @ctor.noReturn = yes
     # This is added for the benefit of --google.
     @ctor.ctorParent = @parent
-    # Sets the comment before the class here
-    #@ctor.comment = @comment
 
   # Instead of generating the JavaScript string directly, we build up the
   # equivalent syntax tree and compile that, in pieces. You can see the
@@ -1163,7 +1163,10 @@ exports.Code = class Code extends Base
     @body.makeReturn() unless wasEmpty or @noReturn
     idt   = o.indent
     isGoogleConstructor = (o.google or o.closure) and @ctor
-    if isGoogleConstructor
+    if not isGoogleConstructor
+      code  = 'function'
+      code  += ' ' + @name if @ctor
+    else
       if @ctorParent
         parentClassName = @ctorParent.compile o
         o.google?.includes.push {name: parentClassName, alias: null}
@@ -1172,14 +1175,13 @@ exports.Code = class Code extends Base
         extendsJsDoc = ''
       o.google?.provides.push @name
 
-      if not o.closure_nodoc
-
+      if o.closure_nodoc
+        code = ""
+      else if o.closure
         # Add Closure type annotation to constructor    
-        rootScope = o.scope.parent.expressions # contains a single block
-        classBlock = new Block rootScope.expressions # class block
-
-        console.log @ctor
-        console.log "--------------------------------------------------"
+        rootScope = o.scope.parent.expressions # Contains a single block
+        classBlock = new Block rootScope.expressions # Class block
+        # console.log classBlock.toString() # Useful for debugging
         
         # Find the node before this node
         lastNode = null
@@ -1188,24 +1190,16 @@ exports.Code = class Code extends Base
             return true
           lastNode = node
           return false
-
-        if lastNode?.comment?
-          precedingComment = true
-        else
-          precedingComment = false
-        
-        code = ''
-        if not precedingComment
-          code = "#{@tab}/**"
-
+        # If its a comment we leave off the start tag of the jsdoc
+        precedingComment = lastNode?.comment?
+        if precedingComment then code = "" else code = "#{@tab}/**"
+        # Add Closure constructor annotations
         code += """
                #{@tab} * @constructor
-               #{extendsJsDoc}#{@tab} */"""
-          
-      else
-
-        code = ""
-
+               #{extendsJsDoc}#{@tab} */\n"""
+      
+      # Add constructor declaration
+      #   foo.bar = function (...) {}
       if o.closure
         namespaces = @name.split("\.")
         if namespaces.length is 1
@@ -1217,9 +1211,6 @@ exports.Code = class Code extends Base
       else
         # no var declaration
         code += "#{@tab}#{@name} = function"
-    else
-      code  = 'function'
-      code  += ' ' + @name if @ctor
 
     # Annotate arguments with default values with inline jsdoc for 
     # Closure optional params and inferred type information
