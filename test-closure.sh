@@ -33,5 +33,5 @@ cat build/closure/test/adult.js
 mkdir -p build/closure/no-google-libs
 bin/coffee --closure -b -o build/closure/test/no-google-libs -c closure/test/no-google-libs/*.coffee
 
-echo "// === test.js ==="
-cat build/closure/test/no-google-libs/test.js
+echo "// === closure.js ==="
+cat build/closure/test/no-google-libs/closure.js
