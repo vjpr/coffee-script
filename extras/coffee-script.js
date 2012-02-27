@@ -1629,7 +1629,7 @@ parse: function parse(input) {
             token = self.symbols_[token] || token;
         }
         return token;
-    };
+    }
 
     var symbol, preErrorSymbol, state, action, a, r, yyval={},p,len,newState, expected;
     while (true) {
@@ -1647,6 +1647,7 @@ parse: function parse(input) {
         }
 
         // handle parse error
+        _handle_error:
         if (typeof action === 'undefined' || !action.length || !action[0]) {
 
             if (!recovering) {
@@ -1657,7 +1658,7 @@ parse: function parse(input) {
                 }
                 var errStr = '';
                 if (this.lexer.showPosition) {
-                    errStr = 'Parse error on line '+(yylineno+1)+":\n"+this.lexer.showPosition()+'\nExpecting '+expected.join(', ');
+                    errStr = 'Parse error on line '+(yylineno+1)+":\n"+this.lexer.showPosition()+"\nExpecting "+expected.join(', ') + ", got '" + this.terminals_[symbol]+ "'";
                 } else {
                     errStr = 'Parse error on line '+(yylineno+1)+": Unexpected " +
                                   (symbol == 1 /*EOF*/ ? "end of input" :
@@ -1772,6 +1773,7 @@ parse: function parse(input) {
 
     return true;
 }};
+undefined
 return parser;
 })();
 if (typeof require !== 'undefined' && typeof exports !== 'undefined') {
@@ -3342,7 +3344,7 @@ if (typeof module !== 'undefined' && require.main === module) {
     };
     Code.prototype.jumps = NO;
     Code.prototype.compileNode = function(o) {
-      var code, exprs, extendsJsDoc, extendsNode, i, idt, isGoogleConstructor, lit, p, param, parentClassName, ref, splats, v, val, vars, wasEmpty, _i, _j, _k, _len, _len2, _len3, _len4, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
+      var code, exprs, extendsJsDoc, extendsNode, i, idt, isGoogleConstructor, lit, namespaces, p, param, parentClassName, ref, splats, v, val, vars, wasEmpty, _i, _j, _k, _len, _len2, _len3, _len4, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
       o.scope = new Scope(o.scope, this.body, this);
       o.scope.shared = del(o, 'sharedScope');
       o.indent += TAB;
@@ -3430,11 +3432,20 @@ if (typeof module !== 'undefined' && require.main === module) {
         if ((_ref7 = o.google) != null) {
           _ref7.provides.push(this.name);
         }
-        code = "" + this.tab + "/**\n" + this.tab + " * @constructor\n" + extendsJsDoc + this.tab + " */";
-        if (o.closure) {
-          code += "\n" + this.tab + this.name + " = function";
+        if (o.closure_nodoc) {
+          code = "" + this.tab + "/**\n" + this.tab + " * @constructor\n" + extendsJsDoc + this.tab + " */";
         } else {
-          code += "\n" + this.tab + this.name + " = function";
+          code = "";
+        }
+        if (o.closure) {
+          namespaces = this.name.split("\.");
+          if (namespaces.length === 1) {
+            code += "var " + this.tab + this.name + " = function";
+          } else {
+            code += "" + this.tab + this.name + " = function";
+          }
+        } else {
+          code += "" + this.tab + this.name + " = function";
         }
       } else {
         code = 'function';

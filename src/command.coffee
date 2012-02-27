@@ -42,6 +42,7 @@ SWITCHES = [
   [      '--nodejs [ARGS]',   'pass options through to the "node" binary']
   [      '--google',          'format output for Google Closure Tools']
   [      '--closure',         'format output for Google Closure Tools without Google dependencies']
+  [      '--closure_nodoc',   'format output for Google Closure Tools without Google dependencies and no jsdoc generation']
   ['-v', '--version',         'display CoffeeScript version']
   ['-h', '--help',            'display this help message']
 ]

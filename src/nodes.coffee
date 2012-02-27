@@ -1169,26 +1169,31 @@ exports.Code = class Code extends Base
       else
         extendsJsDoc = ''
       o.google?.provides.push @name
-      code = """
-             #{@tab}/**
-             #{@tab} * @constructor
-             #{extendsJsDoc}#{@tab} */"""
+
+      if o.closure_nodoc
+        code = """
+               #{@tab}/**
+               #{@tab} * @constructor
+               #{extendsJsDoc}#{@tab} */
+               """
+      else
+        code = ""
 
       if o.closure
         namespaces = @name.split("\.")
         if namespaces.length is 1
           # include var declaration for google without closure
-          code += "\nvar #{@tab}#{@name} = function"
+          code += "var #{@tab}#{@name} = function"
         else
           # clazz = namespaces[namespaces.length - 1]
-          code += "\n#{@tab}#{@name} = function"
+          code += "#{@tab}#{@name} = function"
       else
         # no var declaration
-        code += "\n#{@tab}#{@name} = function"
+        code += "#{@tab}#{@name} = function"
     else
       code  = 'function'
       code  += ' ' + @name if @ctor
-      
+
     code  += '(' + vars.join(', ') + ') {'
     code  += "\n#{ @body.compileWithDeclarations o }\n#{@tab}" unless @body.isEmpty()
     
