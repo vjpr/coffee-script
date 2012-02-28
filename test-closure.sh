@@ -6,10 +6,6 @@
 #
 #	  git checkout lib/*.js && bin/cake build && bin/cake build:parser && ./test-closure.sh
 #
-# vjpr: I use the command below instead otherwise it can't find the `jison` module:
-#
-# 	git checkout lib/*.js && bin/cake build:full && ./test-closure.sh
-#
 # This way, if there is an error during the build, `git checkout` is used to
 # "reset" the build so that it is possible to rebuild.
 #
