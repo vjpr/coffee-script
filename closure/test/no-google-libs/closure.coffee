@@ -4,7 +4,23 @@ class example.test
   constructor: (foo, @bar = 'test') ->
   	foo = 'foo'
 
-  # getBar: => @bar
+ class test2
 
-class test2
+  ###*
+  @param {string} bar
+  ###
   constructor: ->
+
+  ###* hello ###
+  getBar: => @bar
+
+  ###*
+  hello 
+  ###
+  getFoo: => @foo
+
+  ###*
+  hello
+  ###
+
+  getFoo2: => @foo
