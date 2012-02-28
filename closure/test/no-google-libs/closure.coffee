@@ -24,3 +24,19 @@ class example.test
   ###
 
   getFoo2: => @foo
+
+  ###*
+  @return {Object}
+  ###
+  aMethod: (a = '{?string=}', b='{{id: number, name: string}}', c='yo', d=T('{number=}'), e=T('{number=}', 1) ) =>
+
+  ###*
+  Type inference
+  ###
+  a: (a=T('a')) ->
+
+  b: (b=T(1)) ->
+
+  c: (c=T('{string=}')) ->
+
+  d: (d='yo!') ->
