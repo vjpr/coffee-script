@@ -15,16 +15,16 @@
 
 set -e
 mkdir -p build/closure/test
-bin/coffee --google -b -o build/closure/test -c closure/test/*.coffee
+# bin/coffee --google -b -o build/closure/test -c closure/test/*.coffee
 
-echo "// === abstractperson.js ==="
-cat build/closure/test/abstractperson.js
+# echo "// === abstractperson.js ==="
+# cat build/closure/test/abstractperson.js
 
-echo "// === person.js ==="
-cat build/closure/test/person.js
+# echo "// === person.js ==="
+# cat build/closure/test/person.js
 
-echo "// === adult.js ==="
-cat build/closure/test/adult.js
+# echo "// === adult.js ==="
+# cat build/closure/test/adult.js
 
 mkdir -p build/closure/no-google-libs
 bin/coffee --closure --closure_infer -b -o build/closure/test/no-google-libs -c closure/test/no-google-libs/*.coffee
