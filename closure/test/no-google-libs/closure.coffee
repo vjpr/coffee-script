@@ -1,15 +1,29 @@
-class example.test
 
-  ###* @param {string} bar ###
-  constructor: (foo, @bar = 'test') ->
-  	foo = 'foo'
+class test3
+  
+  ###*
+  @param {string} bar
+  ###
+  constructor: (foo='test') ->
 
- class test2
+  get: =>
+
+
+class test
 
   ###*
   @param {string} bar
   ###
-  constructor: ->
+  constructor: (foo, @bar = 'test') ->
+  	foo = 'foo'
+
+class test2
+
+  ###*
+  @param {string} bar
+  ###
+  constructor: (foo='test') ->
+  	test
 
   ###* hello ###
   getBar: => @bar
@@ -26,6 +40,7 @@ class example.test
   getFoo2: => @foo
 
   ###*
+  @param {?string=} a
   @return {Object}
   ###
   aMethod: (a = '{?string=}', b='{{id: number, name: string}}', c='yo', d=T('{number=}'), e=T('{number=}', 1) ) =>
@@ -37,6 +52,15 @@ class example.test
 
   b: (b=T(1)) ->
 
-  c: (c=T('{string=}')) ->
+  c: (c=T('{?string=}')) ->
+
+  cc: (c='{?string=}') ->
 
   d: (d='yo!') ->
+
+class toast
+
+  ###*
+  @param {string} bar
+  ###
+  constructor: (foo='test') ->

@@ -1125,8 +1125,7 @@ exports.Code = class Code extends Base
 
   isStatement: -> !!@ctor
 
-  isGoogleConstructor: (o) ->
-    (o.google or o.closure) and @ctor
+  isGoogleConstructor: (o) -> (o.google or o.closure) and @ctor
 
   jumps: NO
 
@@ -1169,10 +1168,14 @@ exports.Code = class Code extends Base
     # Generate Code
     # -------------
 
+    comments = @addFunctionComments o
     code = ''
 
-    code += @openBlock o
-    code += @addFunctionComments o
+    if comments isnt ''
+      code += "#{@tab}/**\n" if not @isPreviousNodeAComment(o)
+      code += comments
+      code += "*/\n"
+
     code += @addFunctionDeclaration o
 
     # Arguments
@@ -1183,8 +1186,6 @@ exports.Code = class Code extends Base
 
     code += @closeBlock o
 
-    console.log code
-
     return @tab + code if @ctor
     return utility('bind', o) + "(#{code}, #{@context})" if @bound
     if @front or (o.level >= LEVEL_ACCESS) then "(#{code})" else code
@@ -1192,11 +1193,8 @@ exports.Code = class Code extends Base
   # Sections
   # --------
 
-  openBlock: (o) ->
-    if @isPreviousNodeAComment(o) then return "" else return "#{@tab}/**\n"
-
   addFunctionComments: (o) ->
-    return "" if o.closure_nodoc
+    return '' if o.closure_nodoc
     code = ''
     code += @addParamAnnotations o
     if @isGoogleConstructor o
@@ -1205,28 +1203,29 @@ exports.Code = class Code extends Base
       if @ctorParent
         parentClassName = @ctorParent.compile o
         o.google?.includes.push {name: parentClassName, alias: null}
-        extendsJsDoc = "#{@tab} * @extends {#{parentClassName}}\n"
+        extendsJsDoc = "#{@tab}@extends {#{parentClassName}}\n"
       o.google?.provides.push @name
-      code += """#{@tab} * @constructor
+      code += """#{@tab}@constructor
                  #{extendsJsDoc}#{@tab}"""
-    code += "*/\n"
     return code
 
   isPreviousNodeAComment: (o) ->
-    rootScope = o.scope.parent.expressions # Contains a single block
-    classBlock = new Block rootScope.expressions # Class block
-    # console.log classBlock.toString() # Useful for debugging
-    
+    topBlock = new Block o.scope.parent.expressions.expressions
+    previousNodeIsComment = false
     # Find the node before this node
     lastNode = null
-    classBlock.contains (node) =>
-      if node.ctor is @ctor
+     # We use foundNode because contains is not breaking out of the loop properly
+     # when using return statements - might be a bug?
+    foundNode = false
+    topBlock.contains (node) =>
+      if @ctor isnt undefined and node.ctor is @ctor
+        foundNode = true
         return true
-      lastNode = node
+      lastNode = node if not foundNode
       return false
     # If its a comment we leave off the start tag of the jsdoc
-    precedingComment = lastNode?.comment?
-    return precedingComment
+    previousNodeIsComment = lastNode?.comment?
+    return previousNodeIsComment
 
   extractMethodAsString: (value) ->
 
@@ -1239,7 +1238,7 @@ exports.Code = class Code extends Base
       for param, i in @params
 
         tMode = false
-        if param.value?.variable?.base?.value is 'T'
+        if param.value?.variable?.base?.value is '__'
           # Type is form of `T(<type>, <default-value>)` to support default values
           defaultParam = param.value?.args?[0]?.base.value
           tMode = true
@@ -1273,7 +1272,7 @@ exports.Code = class Code extends Base
         ///
         m = re.exec defaultParam
         if m?
-          code += "#{@tab} * @param #{m[1]} #{name}\n"
+          code += "#{@tab}@param #{m[1]} #{name}\n"
         else if tMode
           # If its not a Google Closure type annotations
           # we check if the user has entered a literal and try some basic type inference
@@ -1284,9 +1283,9 @@ exports.Code = class Code extends Base
           else 
             inference = @type parsed
           if inference is 'function'
-            code += "#{@tab} * @param {#{inference}()=} #{name}\n"            
+            code += "#{@tab}@param {#{inference}()=} #{name}\n"            
           else if inference isnt 'undefined'
-            code += "#{@tab} * @param {#{inference}=} #{name}\n"
+            code += "#{@tab}@param {#{inference}=} #{name}\n"
 
     return code
 
