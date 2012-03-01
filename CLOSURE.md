@@ -123,42 +123,75 @@ Adds inline annotations to optional function parameters based on the type of the
 		}
 	}
 
-When you really do need a default value use this method:
+## Current Google Closure mapping
 
-	# Plain JavaScript function because ~ is wierd in CoffeeScript
-	`function ~(val) { if val.startsWith('{') ? return null : return val }`
-
-	class Foo
-		constructor: (@bar =~ '{string=}')
+Array
 
 ## Possible alternatives for the default parameter function
 
-foo = (name = '{string}'.type()) ->
-foo = (name = '{string}'.default('foo')) ->
+I like this one a lot:
 
-foo = (name = 'foo'.t('{?string=}')) ->
+	foo = (name = +string) ->
+	foo = (name =+ string) ->
+	foo = (name =+ )
+	foo = (name =+ num) ->
 
-foo = (name = '{string}'._()) ->
-foo = (name = '{string}'._('foo')) ->
+Or:
 
-foo = (name = string()) ->
-foo = (name = 'foo'.string()) ->
-foo = (name = (1).number()) ->
-foo = (name = 'Foo.Bar'.type()) ->
+Add `function(new:String,*)` for each inline param - this is unlikely
+	
+	foo = (name = String, name = String.Opt)
+	foo = (name = String, name = String[s])
 
-foo = (name = (__ '{string}')) ->
-foo = (name = (__ '{string}', 'foo')) ->
+	foo = (name = String, name = Opt(String))
+	foo = (name = String, name = Opt(String))
 
-foo = (name = __['{string}']) ->
+	foo = (name = String, name = Array[String])
+	foo = (name = String, name = Object[String,Number]})
 
-foo = (name = t('{string}')) ->
+foo = (name =+ tString('hello'), name = tArray[(tString, tNumber)->])
 
-foo = name
+foo = (name =+ _String('hello'), name = _Array[_String, _Number])
+
+These are some more ideas:
+
+	foo = (name = '{string}'.type()) ->
+	foo = (name = '{string}'.default('foo')) ->
+
+	foo = (name = 'foo'.t('{?string=}')) ->
+
+	foo = (name = '{string}'._()) ->
+	foo = (name = '{string}'._('foo')) ->
+
+	foo = (name = string()) ->
+	foo = (name = 'foo'.string()) ->
+	foo = (name = (1).number()) ->
+	foo = (name = 'Foo.Bar'.type()) ->
+
+	foo = (name = (__ '{string}')) ->
+	foo = (name = (__ '{string}', 'foo')) ->
+
+	foo = (name = __['{string}']) ->
+
+	foo = (name = t('{string}')) ->
+
+	foo = name
+
+Or:
+
+Implement a special short-hand CoffeeScript JavaDoc:
+
+	# @name string
+	# @date Date
+	# =string
+	foo = (name = 1,date=+Date()
+		'hello'
 
 ## Planned Features
 
  * Better inline annotations based on identifier not just
  * Allow adding params by annotating the initialize method in Backbone
+ * Automatic @return
 
 ## Dev
 
