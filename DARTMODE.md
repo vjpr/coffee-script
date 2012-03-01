@@ -10,6 +10,7 @@ Apparently there are plans for a Google Closure to Dart transpiler. This is a go
 
 ## References
 
+<http://turbomanage.wordpress.com/2011/12/14/syntax-for-dart/>
 <http://blog.sethladd.com/2012/01/vanilla-dart-ftw.html>
 
 ## TODO
