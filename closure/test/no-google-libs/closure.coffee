@@ -62,6 +62,8 @@ class toast
 
   ###*
   @interface
-  @param {string} bar
   ###
   constructor: (foo='test') ->
+
+class toast2
+  constructor: ->

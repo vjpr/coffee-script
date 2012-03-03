@@ -1168,14 +1168,23 @@ exports.Code = class Code extends Base
     # Generate Code
     # -------------
 
-    comments = @addFunctionComments o
+    # If previous node was a herecomment and this node is a constructor,
+    # it means we have cut off the closing tag of the comment. So we need 
+    # to add our comments and then close it.
     code = ''
 
+    comments = @addFunctionComments o
+
+    # Add our generated JSDoc and open block if there wasn't a previous comment
     if comments isnt ''
       code += "#{@tab}/**\n" if not @getPreviousNodeIfComment(o)?
       code += comments
       code += "*/\n"
+    else
+      # Close the block if there was a previous comment
+      code += "*/\n" if @getPreviousNodeIfComment(o)?
 
+    # Add function declaration/assignment
     code += @addFunctionDeclaration o
 
     # Arguments
@@ -1193,6 +1202,8 @@ exports.Code = class Code extends Base
   # Sections
   # --------
 
+  # Add @constructor, except if the user-defined comment contains @interface.
+  # Also add @extends, and @params tags extracted from default arguments.
   addFunctionComments: (o) ->
     return '' if o.closure_nodoc
     code = ''
@@ -1207,8 +1218,8 @@ exports.Code = class Code extends Base
       o.google?.provides.push @name
       # Only add constructor if an interface annotation doesn't exist
       comment = @getPreviousNodeIfComment(o)
-      console.log "Comment: " + comment
-      code += "#{@tab}@constructor\n" unless comment.search('@interface') isnt -1
+      # console.log "Comment: " + comment
+      code += "#{@tab}@constructor\n" unless comment?.search('@interface') isnt -1
       code += "#{extendsJsDoc}#{@tab}"
 
     return code
