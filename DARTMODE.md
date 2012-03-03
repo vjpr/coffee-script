@@ -1,25 +1,29 @@
 # CoffeeScript - Dart Mode
 
-Compiling CoffeeScript to Google Dart code with full background compatability.
+Compiling CoffeeScript to Google Dart code with full backwards compatability.
 
-This will leverage the work I have done on the CoffeeScript Closure Mode fork.
+This will leverage the work I have done on the [CoffeeScript Closure Mode] (https://github.com/vjpr/coffee-script/blob/master/CLOSURE.md) fork.
 
-## Interesting
-
-Apparently there are plans for a Google Closure to Dart transpiler. This is a good indication that this project is achievable.
+Apparently there are plans for a Google Closure to Dart transpiler. This would allow CoffeeScript Closure Mode to be used as it is. Until then, I'm going to give this a crack.
 
 ## References
 
-<http://turbomanage.wordpress.com/2011/12/14/syntax-for-dart/>
 <http://blog.sethladd.com/2012/01/vanilla-dart-ftw.html>
+<http://synonym.dartlang.org/>
+<http://turbomanage.wordpress.com/2011/12/14/syntax-for-dart/>
 
 ## TODO
 
- * Setup test suite first off
- * Core
- * jQuery
- * Backbone
- * Underscore
+ * Convert `documentation/js` code examples to `documentation/dart`
+ * New flag `--dart`
+ * Create test suite to compare `coffee --dart documentation/coffee/*` output with `documentation/dart`.
+ * Modify code generation
+ * Use Google Closure comments to add type information
+ * Create conversion libraries for:
+   * Core
+   * jQuery
+   * Backbone
+   * Underscore
 
 ## Changes
 
