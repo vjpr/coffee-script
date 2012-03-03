@@ -66,4 +66,35 @@ class toast
   constructor: (foo='test') ->
 
 class toast2
-  constructor: ->
+
+
+  # Block Comments
+
+  ###
+    This is a here-comment.
+    Kind of like a heredoc.
+  ###
+
+  test "something", ->
+    a
+
+# Block Comments
+
+###
+  This is a here-comment.
+  Kind of like a heredoc.
+###
+
+test "block comments in objects", ->
+  a = {}
+  b = {}
+  obj = {
+    a: a
+    ###
+    comment
+    ###
+    b: b
+  }
+
+  eq a, obj.a
+  eq b, obj.b

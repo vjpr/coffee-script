@@ -37,10 +37,11 @@ exports.helpers = require './helpers'
 # Compile a string of CoffeeScript code to JavaScript, using the Coffee/Jison
 # compiler.
 exports.compile = compile = (code, options = {}) ->
+  {merge} = exports.helpers
   try
     options.google = if options.google then {includes: [], provides: []} else null
 
-    js = (parser.parse lexer.tokenize code).compile options
+    js = (parser.parse lexer.tokenize code).compile merge {}, options
     # Files should end with a newline.
     js + '\n'
   catch err

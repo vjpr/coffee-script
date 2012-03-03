@@ -477,7 +477,7 @@ exports.Comment = class Comment extends Base
   compileNode: (o, level) ->
     code = '/*' + multident(@comment, @tab)
     # Close the comment unless its above a constructor when in closure mode
-    code += '*/' if not @forCtor and o.closure and not o.closure_nodoc
+    code += '*/' unless (@forCtor and o.closure and not o.closure_nodoc)
     code = o.indent + code if (level or o.level) is LEVEL_TOP
     code
 
