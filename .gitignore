@@ -8,3 +8,4 @@ examples/beautiful_code/parse.coffee
 *.gem
 build/
 node_modules/
+.idea/
