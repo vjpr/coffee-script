@@ -98,3 +98,6 @@ test "block comments in objects", ->
 
   eq a, obj.a
   eq b, obj.b
+
+class a
+  constructor: (a) ->

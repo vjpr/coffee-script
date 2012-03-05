@@ -1219,7 +1219,8 @@ exports.Code = class Code extends Base
       # Only add constructor if an interface annotation doesn't exist
       comment = @getPreviousNodeIfComment(o)
       # console.log "Comment: " + comment
-      code += "#{@tab}@constructor\n" unless comment?.search('@interface') isnt -1
+      unless comment? and comment?.search('@interface') isnt -1
+        code += "#{@tab}@constructor\n" 
       code += "#{extendsJsDoc}#{@tab}"
 
     return code
